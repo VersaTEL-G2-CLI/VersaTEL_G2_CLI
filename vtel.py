@@ -27,7 +27,7 @@ class CLI():
         if self.args.vtel_sub == 'stor':
             self.judge()
         elif self.args.vtel_sub == 'iscsi':
-            self.isci_judge()
+            self.iscsi_judge()
 
     def parser_vtel(self):
         self.vtel = argparse.ArgumentParser(prog='vtel')
