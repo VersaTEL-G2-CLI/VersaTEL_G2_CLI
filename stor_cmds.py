@@ -199,7 +199,7 @@ class Action():
     #创建storagepool  -- ok
     @staticmethod
     def create_storagepool_lvm(node,stp,vg):
-        cmd = 'linstor --no-color storage-pool create lvm %s %s %s' %(node,stp,vg)
+        cmd = 'linstor storage-pool create lvm %s %s %s' %(node,stp,vg)
         action = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         result = action.stdout
         if reg.judge_cmd_result_war(str(result)):

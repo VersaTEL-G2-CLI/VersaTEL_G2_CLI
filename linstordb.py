@@ -152,50 +152,32 @@ class LINSTORDB():
 
     def get_output(self):
         #threading
-        # start = nowtime()
-        #
-        # thread_ins_node = threading.Thread(target=self.get_node())
-        # thread_ins_res = threading.Thread(target=self.get_res())
-        # thread_ins_sp = threading.Thread(target=self.get_sp())
-        #
-        #
-        # thread_ins_node.start()
-        # thread_ins_res.start()
-        # thread_ins_sp.start()
-        #
-        # thread_ins_node.join()
-        # thread_ins_res.join()
-        # thread_ins_sp.join()
-        #
-        # # self.get_node()
-        # # self.get_res()
-        # # self.get_sp()
-        # end = nowtime()
-        # print(end-start)
+        thread_ins_node = threading.Thread(target=self.get_node())
+        thread_ins_res = threading.Thread(target=self.get_res())
+        thread_ins_sp = threading.Thread(target=self.get_sp())
+
+        thread_ins_node.start()
+        thread_ins_res.start()
+        thread_ins_sp.start()
+
+        thread_ins_node.join()
+        thread_ins_res.join()
+        thread_ins_sp.join()
 
 
         #multiprocessing
-        start = nowtime()
+        # process_ins_node = mp.Process(target=self.get_node())
+        # process_ins_res = mp.Process(target=self.get_res())
+        # process_ins_sp = mp.Process(target=self.get_sp())
+        #
+        # process_ins_node.start()
+        # process_ins_res.start()
+        # process_ins_sp.start()
+        #
+        # process_ins_node.join()
+        # process_ins_res.join()
+        # process_ins_sp.join()
 
-        process_ins_node = mp.Process(target=self.get_node())
-        process_ins_res = mp.Process(target=self.get_res())
-        process_ins_sp = mp.Process(target=self.get_sp())
-
-
-        process_ins_node.start()
-        process_ins_res.start()
-        process_ins_sp.start()
-
-        process_ins_node.join()
-        process_ins_res.join()
-        process_ins_sp.join()
-
-        # self.get_node()
-        # self.get_res()
-        # self.get_sp()
-        end = nowtime()
-
-        # print(end-start)
     def get_vg(self):
         result_vg = subprocess.Popen('vgs',shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
         output_vg = result_vg.stdout.read().decode()
@@ -214,7 +196,6 @@ class LINSTORDB():
                                        stderr=subprocess.STDOUT)
         output_node = result_node.stdout.read().decode('utf-8')
         node = gi.GetLinstor(output_node)
-        # return node.get_data()
         self.rep_nodetb(node.get_data())
 
     def get_res(self):
@@ -224,9 +205,6 @@ class LINSTORDB():
         res = gi.GetLinstor(output_res)
         self.rep_resourcetb(res.get_data())
 
-
-
-
     def get_sp(self):
         result_sp = subprocess.Popen('linstor --no-color --no-utf8 sp l', shell=True, stdout=subprocess.PIPE,
                                      stderr=subprocess.STDOUT)
@@ -234,32 +212,6 @@ class LINSTORDB():
         sp = gi.GetLinstor(output_sp)
         self.rep_storagepooltb(sp.get_data())
 
-        # start = nowtime()
-        # self.list_node = get_node()
-        # self.list_resource = get_res()
-        # self.list_storagepool = get_sp()
-        # end = nowtime()
-        # print(end-start)
-
-
-        # start = nowtime()
-        # result_sp = subprocess.Popen('linstor --no-color --no-utf8 sp l',shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
-        # result_res = subprocess.Popen('linstor --no-color --no-utf8 r lv',shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
-        # result_node = subprocess.Popen('linstor --no-color --no-utf8 n l',shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
-        #
-        # output_sp = result_sp.stdout.read().decode('utf-8')
-        # output_res = result_res.stdout.read().decode('utf-8')
-        # output_node = result_node.stdout.read().decode('utf-8')
-        # # output_sp = subprocess.getoutput('linstor --no-color --no-utf8 sp l')
-        # # output_res = subprocess.getoutput('linstor --no-color --no-utf8 r lv')
-        # # output_node = subprocess.getoutput('linstor --no-color --no-utf8 n l')
-        # end_l = nowtime()
-        # self.list_node = gi.GetLinstor(output_node)
-        # self.list_resource = gi.GetLinstor(output_res)
-        # self.list_storagepool = gi.GetLinstor(output_sp)
-        # end = nowtime()
-        # print('LISNTOR:',end_l - start)
-        # print('DEAL:',end-end_l)
 
     #创建表
     def create_tb(self):
@@ -288,16 +240,13 @@ class LINSTORDB():
 
 
     def rep_storagepooltb(self,list_data):
-        # list_data = self.list_storagepool
         list_id = range(len(list_data))
-
         for i, data in zip(list_id, list_data):
             id = i+1
             stp, node, dri, pooln, freecap, totalcap, Snap, state = data
             self.cur.execute(self.replace_stb_sql, (id, stp, node, dri, pooln, freecap, totalcap, Snap, state))
 
     def rep_resourcetb(self,list_data):
-        # list_data = self.list_resource
         list_id = range(len(list_data))
         for i, data in zip(list_id,list_data):
             id = i+1
@@ -305,8 +254,6 @@ class LINSTORDB():
             self.cur.execute(self.replace_rtb_sql, (id, node, res, stp, voln, minorn, devname, allocated, use, state))
 
     def rep_nodetb(self,list_data):
-        #.get_data()
-        # list_data = self.list_node
         list_id = range(len(list_data))
         for i, data in zip(list_id,list_data):
             id = i+1
@@ -340,26 +287,6 @@ class LINSTORDB():
         SQL_script = con.iterdump()
         cur.close()
         return "\n".join(SQL_script)
-
-
-
-
-
-
-    # def conn(self):
-    #     client = socket.socket()
-    #     client.connect(('10.203.1.198', 12129))
-    #     judge_conn = client.recv(8192).decode()
-    #     print(judge_conn)
-    #
-    #     client.send(b'database')
-    #     client.recv(8192)
-    #     client.sendall(self.data_base_dump().encode())
-    #     client.recv(8192)
-    #     client.send(b'exit')
-    #     client.close()
-
-
 
 
 

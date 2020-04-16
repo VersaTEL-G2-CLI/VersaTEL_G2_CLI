@@ -24,8 +24,10 @@ class CLI():
         self.parser_stor()
         self.parser_iscsi()
         self.args = self.vtel.parse_args()
-        self.judge()
-
+        if self.args.vtel_sub == 'stor':
+            self.judge()
+        elif self.args.vtel_sub == 'iscsi':
+            self.isci_judge()
 
     def parser_vtel(self):
         self.vtel = argparse.ArgumentParser(prog='vtel')
@@ -161,12 +163,90 @@ class CLI():
         ###stor snap show
 
     def parser_iscsi(self):
-        ##iscsi
-        sub_vtel_iscsi = self.vtel_iscsi.add_subparsers(dest='iscsi_next')
-        self.vtel_iscsi_create = sub_vtel_iscsi.add_parser('create', help='iscsi resource create...', add_help=False)
-        self.vtel_iscsi_show = sub_vtel_iscsi.add_parser('show', help='iscsi resource modify...', add_help=False)
-        self.vtel_iscsi_modify = sub_vtel_iscsi.add_parser('modify', help='iscsi resource create...', add_help=False)
-        self.vtel_iscsi_delete = sub_vtel_iscsi.add_parser('delete', help='iscsi resource modify...', add_help=False)
+        ## iscsi
+        sub_iscsi = self.vtel_iscsi.add_subparsers(dest='iscsi')
+        self.iscsi_host = sub_iscsi.add_parser('host', aliases='h', help='host operation')
+        self.iscsi_disk = sub_iscsi.add_parser('disk', aliases='d', help='disk operation')
+        self.iscsi_hostgroup = sub_iscsi.add_parser('hostgroup', aliases=['hg'], help='hostgroup operation')
+        self.iscsi_diskgroup = sub_iscsi.add_parser('diskgroup', aliases=['dg'], help='diskgroup operation')
+        self.iscsi_map = sub_iscsi.add_parser('map', aliases='m', help='map operation')
+        self.iscsi_show = sub_iscsi.add_parser('show', aliases='s')
+
+        ### iscsi show
+        self.iscsi_show.add_argument('js', help='js show')
+
+        ### iscsi host
+        sub_iscsi_host = self.iscsi_host.add_subparsers(dest='host')
+        self.iscsi_host_create = sub_iscsi_host.add_parser('create', aliases='c',
+                                                           help='host create [host_name] [host_iqn]')
+        self.iscsi_host_show = sub_iscsi_host.add_parser('show', aliases='s', help='host show / host show [host_name]')
+        self.iscsi_host_delete = sub_iscsi_host.add_parser('delete', aliases='d', help='host delete [host_name]')
+        # self.iscsi_host_modify = sub_iscsi_host.add_parser('modify',help='host modify')
+
+        ### iscsi disk
+        sub_iscsi_disk = self.iscsi_disk.add_subparsers(dest='disk')
+        self.iscsi_disk_show = sub_iscsi_disk.add_parser('show', aliases='s', help='disk show')
+
+        ### iscsi hostgroup
+        sub_iscsi_hostgroup = self.iscsi_hostgroup.add_subparsers(dest='hostgroup')
+        self.iscsi_hostgroup_create = sub_iscsi_hostgroup.add_parser('create', aliases='c',
+                                                                     help='hostgroup create [hostgroup_name] [host_name1] [host_name2] ...')
+        self.iscsi_hostgroup_show = sub_iscsi_hostgroup.add_parser('show', aliases='s',
+                                                                   help='hostgroup show / hostgroup show [hostgroup_name]')
+        self.iscsi_hostgroup_delete = sub_iscsi_hostgroup.add_parser('delete', aliases='d',
+                                                                     help='hostgroup delete [hostgroup_name]')
+
+        ### iscsi diskgroup
+        sub_iscsi_diskgroup = self.iscsi_diskgroup.add_subparsers(dest='diskgroup')
+        self.iscsi_diskgroup_create = sub_iscsi_diskgroup.add_parser('create', aliases='c',
+                                                                     help='diskgroup create [diskgroup_name] [disk_name1] [disk_name2] ...')
+        self.iscsi_diskgroup_show = sub_iscsi_diskgroup.add_parser('show', aliases='s',
+                                                                   help='diskgroup show / diskgroup show [diskgroup_name]')
+        self.iscsi_diskgroup_delete = sub_iscsi_diskgroup.add_parser('delete', aliases='d',
+                                                                     help='diskgroup delete [diskgroup_name]')
+
+        ### iscsi map
+        sub_iscsi_map = self.iscsi_map.add_subparsers(dest='map')
+        self.iscsi_map_create = sub_iscsi_map.add_parser('create', aliases='c',
+                                                         help='map create [map_name] -hg [hostgroup_name] -dg [diskgroup_name]')
+        self.iscsi_map_show = sub_iscsi_map.add_parser('show', aliases='s', help='map show / map show [map_name]')
+        self.iscsi_map_delete = sub_iscsi_map.add_parser('delete', aliases='d', help='map delete [map_name]')
+
+        #### iscsi host argument
+        self.iscsi_host_create.add_argument('iqnname', action='store', help='host_name')
+        self.iscsi_host_create.add_argument('iqn', action='store', help='host_iqn')
+        self.iscsi_host_create.add_argument('-gui', help='iscsi gui', nargs='?', default='cmd')
+        self.iscsi_host_show.add_argument('show', action='store', help='host show [host_name]', nargs='?',
+                                          default='all')
+        self.iscsi_host_delete.add_argument('iqnname', action='store', help='host_name', default=None)
+
+        #### iscsi disk argument
+        self.iscsi_disk_show.add_argument('show', action='store', help='disk show [disk_name]', nargs='?',
+                                          default='all')
+
+        #### iscsi hostgroup argument
+        self.iscsi_hostgroup_create.add_argument('hostgroupname', action='store', help='hostgroup_name')
+        self.iscsi_hostgroup_create.add_argument('iqnname', action='store', help='host_name', nargs='+')
+        self.iscsi_hostgroup_create.add_argument('-gui', help='iscsi gui', nargs='?', default='cmd')
+        self.iscsi_hostgroup_show.add_argument('show', action='store', help='hostgroup show [hostgroup_name]',
+                                               nargs='?', default='all')
+        self.iscsi_hostgroup_delete.add_argument('hostgroupname', action='store', help='hostgroup_name', default=None)
+
+        #### iscsi diskgroup argument
+        self.iscsi_diskgroup_create.add_argument('diskgroupname', action='store', help='diskgroup_name')
+        self.iscsi_diskgroup_create.add_argument('diskname', action='store', help='disk_name', nargs='+')
+        self.iscsi_diskgroup_create.add_argument('-gui', help='iscsi gui', nargs='?', default='cmd')
+        self.iscsi_diskgroup_show.add_argument('show', action='store', help='diskgroup show [diskgroup_name]',
+                                               nargs='?', default='all')
+        self.iscsi_diskgroup_delete.add_argument('diskgroupname', action='store', help='diskgroup_name', default=None)
+
+        #### iscsi map argument
+        self.iscsi_map_create.add_argument('mapname', action='store', help='map_name')
+        self.iscsi_map_create.add_argument('-hg', action='store', help='hostgroup_name')
+        self.iscsi_map_create.add_argument('-dg', action='store', help='diskgroup_name')
+        self.iscsi_map_create.add_argument('-gui', help='iscsi gui', nargs='?', default='cmd')
+        self.iscsi_map_show.add_argument('show', action='store', help='map show [map_name]', nargs='?', default='all')
+        self.iscsi_map_delete.add_argument('mapname', action='store', help='map_name', default=None)
 
 
 
@@ -179,7 +259,7 @@ class CLI():
 
         def node_create():
             if args.gui:
-                handle = cli_socketclient.SocketSend()
+                handle = SocketSend
                 handle.send_result(stor_action.create_node,args.node, args.ip, args.nodetype)
             elif args.node and args.nodetype and args.ip:
                 stor_action.create_node(args.node, args.ip, args.nodetype)
@@ -277,7 +357,7 @@ class CLI():
                 if all(list_auto_required) and not any(list_manual_required):
                     #For GUI
                     if args.gui:
-                        handle = cli_socketclient.SocketSend()
+                        handle = SocketSend
                         handle.send_result(stor_action.create_res_auto,args.resource, args.size, args.num)
                         return True
                     #CLI
@@ -293,7 +373,7 @@ class CLI():
                     else:
                         #For GUI
                         if args.gui:
-                            handle = cli_socketclient.SocketSend()
+                            handle = SocketSend
                             handle.send_result(stor_action.create_res_manual,args.resource,args.size,args.node,args.storagepool)
                             return True
                         #CLI
@@ -308,7 +388,7 @@ class CLI():
                     return
                 if not any(list_diskless_forbid):
                     if args.gui:
-                        handle = cli_socketclient.SocketSend()
+                        handle = SocketSend
                         handle.send_result(stor_action.create_res_diskless,args.node, args.resource)
                         return True
                     else:
@@ -326,7 +406,7 @@ class CLI():
                 if all(list_auto_required) and not any(list_manual_required):
                     #For GUI
                     if args.gui:
-                        handle = cli_socketclient.SocketSend()
+                        handle = SocketSend
                         handle.send_result(stor_action.add_mirror_auto,args.resource,args.num)
                         return True
                     else:
@@ -341,7 +421,7 @@ class CLI():
                     else:
                         #For GUI
                         if args.gui:
-                            handle = cli_socketclient.SocketSend()
+                            handle = SocketSend
                             handle.send_result(stor_action.add_mirror_manual,args.resource,args.node,args.storagepool)
                             return True
                         else:
@@ -495,13 +575,13 @@ class CLI():
             if args.storagepool and args.node:
                 if args.lvm:
                     if args.gui:
-                        handle = cli_socketclient.SocketSend()
+                        handle = SocketSend
                         handle.send_result(stor_action.create_storagepool_lvm,args.node, args.storagepool, args.lvm)
                     else:
                         stor_action.create_storagepool_lvm(args.node, args.storagepool, args.lvm)
                 elif args.tlv:
                     if args.gui:
-                        handle = cli_socketclient.SocketSend()
+                        handle = SocketSend
                         handle.send_result(stor_action.create_storagepool_thinlv,args.node, args.storagepool, args.tlv)
                     else:
                         stor_action.create_storagepool_thinlv(args.node, args.storagepool, args.tlv)
@@ -622,6 +702,325 @@ class CLI():
 
         else:
             self.vtel.print_help()
+
+
+
+    """
+    ------iscsi-------
+    """
+    # host创建
+    def judge_hc(self, args, js):
+        print("hostname:", args.iqnname)
+        print("host:", args.iqn)
+        if js.check_key('Host', args.iqnname):
+            print("Fail! The Host " + args.iqnname + " already existed.")
+            return False
+        else:
+            js.creat_data("Host", args.iqnname, args.iqn)
+            print("Create success!")
+            return True
+
+    # host查询
+    def judge_hs(self, args, js):
+        if args.show == 'all' or args.show == None:
+            hosts = js.get_data("Host")
+            print("	" + "{:<15}".format("Hostname") + "Iqn")
+            print("	" + "{:<15}".format("---------------") + "---------------")
+            for k in hosts:
+                print("	" + "{:<15}".format(k) + hosts[k])
+        else:
+            if js.check_key('Host', args.show):
+                print(args.show, ":", js.get_data('Host').get(args.show))
+            else:
+                print("Fail! Can't find " + args.show)
+        return True
+
+    # host删除
+    def judge_hd(self, args, js):
+        print("Delete the host <", args.iqnname, "> ...")
+        if js.check_key('Host', args.iqnname):
+            if js.check_value('HostGroup', args.iqnname):
+                print("Fail! The host in ... hostgroup, Please delete the hostgroup first.")
+            else:
+                js.delete_data('Host', args.iqnname)
+                print("Delete success!")
+        else:
+            print("Fail! Can't find " + args.iqnname)
+
+    # disk查询
+    def judge_ds(self, args, js):
+        cd = crm()
+        # data = cd.lsdata()
+        data = cd.get_data_linstor()
+        linstorlv = GetLinstor(data)
+        disks = {}
+        for d in linstorlv.get_data():
+            disks.update({d[1]: d[5]})
+        js.up_data('Disk', disks)
+        if args.show == 'all' or args.show == None:
+            print("	" + "{:<15}".format("Diskname") + "Path")
+            print("	" + "{:<15}".format("---------------") + "---------------")
+            for k in disks:
+                print("	" + "{:<15}".format(k) + disks[k])
+        else:
+            if js.check_key('Disk', args.show):
+                print(args.show, ":", js.get_data('Disk').get(args.show))
+            else:
+                print("Fail! Can't find " + args.show)
+
+    # hostgroup创建
+    def judge_hgc(self, args, js):
+        print("hostgroupname:", args.hostgroupname)
+        print("iqn name:", args.iqnname)
+        if js.check_key('HostGroup', args.hostgroupname):
+            print("Fail! The HostGroup " + args.hostgroupname + " already existed.")
+            return False
+        else:
+            t = True
+            for i in args.iqnname:
+                if js.check_key('Host', i) == False:
+                    t = False
+                    print("Fail! Can't find " + i)
+            if t:
+                js.creat_data('HostGroup', args.hostgroupname, args.iqnname)
+                print("Create success!")
+                return True
+            else:
+                print("Fail! Please give the true name.")
+                return False
+
+    # hostgroup查询
+    def judge_hgs(self, args, js):
+        if args.show == 'all' or args.show == None:
+            print("Hostgroup:")
+            hostgroups = js.get_data("HostGroup")
+            for k in hostgroups:
+                print("	" + "---------------")
+                print("	" + k + ":")
+                for v in hostgroups[k]:
+                    print("		" + v)
+        else:
+            if js.check_key('HostGroup', args.show):
+                print(args.show + ":")
+                for k in js.get_data('HostGroup').get(args.show):
+                    print("	" + k)
+            else:
+                print("Fail! Can't find " + args.show)
+
+    # hostgroup删除
+    def judge_hgd(self, args, js):
+        print("Delete the hostgroup <", args.hostgroupname, "> ...")
+        if js.check_key('HostGroup', args.hostgroupname):
+            if js.check_value('Map', args.hostgroupname):
+                print("Fail! The hostgroup already map,Please delete the map")
+            else:
+                js.delete_data('HostGroup', args.hostgroupname)
+                print("Delete success!")
+        else:
+            print("Fail! Can't find " + args.hostgroupname)
+
+    # diskgroup创建
+    def judge_dgc(self, args, js):
+        print("diskgroupname:", args.diskgroupname)
+        print("disk name:", args.diskname)
+        if js.check_key('DiskGroup', args.diskgroupname):
+            print("Fail! The DiskGroup " + args.diskgroupname + " already existed.")
+            return False
+        else:
+            t = True
+            for i in args.diskname:
+                if js.check_key('Disk', i) == False:
+                    t = False
+                    print("Fail! Can't find " + i)
+            if t:
+                js.creat_data('DiskGroup', args.diskgroupname, args.diskname)
+                print("Create success!")
+                return True
+            else:
+                print("Fail! Please give the true name.")
+                return False
+
+    # diskgroup查询
+    def judge_dgs(self, args, js):
+        if args.show == 'all' or args.show == None:
+            print("Diskgroup:")
+            diskgroups = js.get_data("DiskGroup")
+            for k in diskgroups:
+                print("	" + "---------------")
+                print("	" + k + ":")
+                for v in diskgroups[k]:
+                    print("		" + v)
+        else:
+            if js.check_key('DiskGroup', args.show):
+                print(args.show + ":")
+                for k in js.get_data('DiskGroup').get(args.show):
+                    print("	" + k)
+            else:
+                print("Fail! Can't find " + args.show)
+
+    # diskgroup删除
+    def judge_dgd(self, args, js):
+        print("Delete the diskgroup <", args.diskgroupname, "> ...")
+        if js.check_key('DiskGroup', args.diskgroupname):
+            if js.check_value('Map', args.diskgroupname):
+                print("Fail! The diskgroup already map,Please delete the map")
+            else:
+                js.delete_data('DiskGroup', args.diskgroupname)
+                print("Delete success!")
+        else:
+            print("Fail! Can't find " + args.diskgroupname)
+
+    # map创建
+    def judge_mc(self, args, js):
+        print("map name:", args.mapname)
+        print("hostgroup name:", args.hg)
+        print("diskgroup name:", args.dg)
+        if js.check_key('Map', args.mapname):
+            print("The Map \"" + args.mapname + "\" already existed.")
+            return False
+        elif js.check_key('HostGroup', args.hg) == False:
+            print("Can't find " + args.hg)
+            return False
+        elif js.check_key('DiskGroup', args.dg) == False:
+            print("Can't find " + args.dg)
+            return False
+        else:
+            if js.check_value('Map', args.dg) == True:
+                print("The diskgroup already map")
+                return False
+            else:
+                crmdata = self.crm_up(js)
+                if crmdata:
+                    mapdata = self.map_data(js, crmdata, args.hg, args.dg)
+                    if self.map_crm_c(mapdata):
+                        js.creat_data('Map', args.mapname, [args.hg, args.dg])
+                        print("Create success!")
+                        return True
+                    else:
+                        return False
+                else:
+                    return False
+
+    # map查询
+    def judge_ms(self, args, js):
+        crmdata = self.crm_up(js)
+        if args.show == 'all' or args.show == None:
+            print("Map:")
+            maps = js.get_data("Map")
+            for k in maps:
+                print("	" + "---------------")
+                print("	" + k + ":")
+                for v in maps[k]:
+                    print("		" + v)
+        else:
+            if js.check_key('Map', args.show):
+                print(args.show + ":")
+                maplist = js.get_data('Map').get(args.show)
+                print('	' + maplist[0] + ':')
+                for i in js.get_data('HostGroup').get(maplist[0]):
+                    print('		' + i + ': ' + js.get_data('Host').get(i))
+                print('	' + maplist[1] + ':')
+                for i in js.get_data('DiskGroup').get(maplist[1]):
+                    print('		' + i + ': ' + js.get_data('Disk').get(i))
+            else:
+                print("Fail! Can't find " + args.show)
+
+    # map删除
+    def judge_md(self, args, js):
+        print("Delete the map <", args.mapname, ">...")
+        if js.check_key('Map', args.mapname):
+            print(js.get_data('Map').get(args.mapname), "will probably be affected ")
+            resname = self.map_data_d(js, args.mapname)
+            if self.map_crm_d(resname):
+                js.delete_data('Map', args.mapname)
+                print("Delete success!")
+        else:
+            print("Fail! Can't find " + args.mapname)
+
+    # 读取所有json文档的数据
+    def judge_s(self, js):
+        data = js.read_data_json()
+        return data
+
+    # 获取并更新crm信息
+    def crm_up(self, js):
+        cd = crm()
+        crm_config_statu = cd.get_data_crm()
+        if 'ERROR' in crm_config_statu:
+            print("Could not perform requested operations, are you root?")
+            return False
+        else:
+            redata = cd.re_data(crm_config_statu)
+            js.up_crmconfig(redata)
+            return redata
+
+    # 获取创建map所需的数据
+    def map_data(self, js, crmdata, hg, dg):
+        mapdata = {}
+        hostiqn = []
+        for h in js.get_data('HostGroup').get(hg):
+            iqn = js.get_data('Host').get(h)
+            hostiqn.append(iqn)
+        mapdata.update({'host_iqn': hostiqn})
+        disk = js.get_data('DiskGroup').get(dg)
+        cd = crm()
+        data = cd.get_data_linstor()
+        linstorlv = GetLinstor(data)
+        print("get linstor r lv data")
+        # print(linstorlv.get_data())
+        diskd = {}
+        for d in linstorlv.get_data():
+            for i in disk:
+                if i in d:
+                    diskd.update({d[1]: [d[4], d[5]]})
+        mapdata.update({'disk': diskd})
+        mapdata.update({'target': crmdata[2]})
+        # print(mapdata)
+        return mapdata
+
+    # 获取删除map所需的数据
+    def map_data_d(self, js, mapname):
+        dg = js.get_data('Map').get(mapname)[1]
+        disk = js.get_data('DiskGroup').get(dg)
+        return disk
+
+    # 调用crm创建map
+    def map_crm_c(self, mapdata):
+        cd = crm()
+        for i in mapdata['target']:
+            target = i[0]
+            targetiqn = i[1]
+        # print(mapdata['disk'])
+        for disk in mapdata['disk']:
+            res = [disk, mapdata['disk'].get(disk)[0], mapdata['disk'].get(disk)[1]]
+            if cd.createres(res, mapdata['host_iqn'], targetiqn):
+                c = cd.createco(res[0], target)
+                o = cd.createor(res[0], target)
+                s = cd.resstart(res[0])
+                if c and o and s:
+                    print('create colocation and order success:', disk)
+                else:
+                    print("create colocation and order fail")
+                    return False
+            else:
+                print('create resource Fail!')
+                return False
+        return True
+
+    # 调用crm删除map
+    def map_crm_d(self, resname):
+        cd = crm()
+        crm_config_statu = cd.get_data_crm()
+        if 'ERROR' in crm_config_statu:
+            print("Could not perform requested operations, are you root?")
+            return False
+        else:
+            for disk in resname:
+                if cd.delres(disk):
+                    print("delete ", disk)
+                else:
+                    return False
+            return True
 
 if __name__ == '__main__':
     CLI()

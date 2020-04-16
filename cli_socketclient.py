@@ -1,7 +1,6 @@
 import pickle
 import linstordb
 import socket
-# from stor_cmds import Action as stor_action
 
 # ip_port = ('192.168.36.61',12129)
 ip_port = ('10.203.1.89',12144)
