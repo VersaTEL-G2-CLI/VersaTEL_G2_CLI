@@ -126,7 +126,7 @@ class CLI():
 
         ###stor resource delete
         self.resource_delete.add_argument('resource',metavar='RESOURCE',action='store', help='Name of the resource to delete')
-        self.resource_delete.add_argument('-n', dest='node', action='store', help='Name of the node')
+        self.resource_delete.add_argument('-n', dest='node', action='store', help='The name of the node. In this way, the cluster retains the attribute of the resource, including its name and size.')
         self.resource_delete.add_argument('-y', dest='yes', action='store_true',help='Skip to confirm selection', default=False)
         self.resource_delete.add_argument('-gui', dest='gui', action='store_true', help=argparse.SUPPRESS, default=False)
 
